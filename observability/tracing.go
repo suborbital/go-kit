@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -46,23 +45,20 @@ func OtelTracer(ctx context.Context, conn *grpc.ClientConn, config TracingConfig
 	}
 
 	traceOpts := tracerOpts(exporter, config.ServiceName, collectorExporterName, config.Probability)
-
 	traceProvider := trace.NewTracerProvider(traceOpts...)
-
 	otel.SetTracerProvider(traceProvider)
 
 	return traceProvider, nil
 }
 
 // HoneycombTracer returns a tracer provider configured to send traces to your Honeycomb account.
-func HoneycombTracer(ctx context.Context, config HoneycombTracingConfig) (*trace.TracerProvider, error) {
+func HoneycombTracer(ctx context.Context, conn *grpc.ClientConn, config HoneycombTracingConfig) (*trace.TracerProvider, error) {
 	exporter, err := otlptrace.New(ctx, otlptracegrpc.NewClient(
-		otlptracegrpc.WithEndpoint(config.Endpoint),
+		otlptracegrpc.WithGRPCConn(conn),
 		otlptracegrpc.WithHeaders(map[string]string{
 			"x-honeycomb-team":    config.APIKey,
 			"x-honeycomb-dataset": config.Dataset,
 		}),
-		otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, "")),
 	))
 	if err != nil {
 		return nil, errors.Wrap(err, "oltptrace.New with exporter as honeycomb")
@@ -74,14 +70,12 @@ func HoneycombTracer(ctx context.Context, config HoneycombTracingConfig) (*trace
 	otel.SetTracerProvider(traceProvider)
 
 	return traceProvider, nil
-
 }
 
 // NoopTracer returns a non-configured empty trace provider that won't do anything.
 func NoopTracer() (*trace.TracerProvider, error) {
 	// Create the most default trace provider and escape early.
 	traceProvider := trace.NewTracerProvider()
-
 	otel.SetTracerProvider(traceProvider)
 
 	return traceProvider, nil
