@@ -30,9 +30,8 @@ type TracingConfig struct {
 // HoneycombTracingConfig embeds the TracingConfig struct, and adds other, specifically Honeycomb related fields.
 type HoneycombTracingConfig struct {
 	TracingConfig
-	Endpoint string
-	APIKey   string
-	Dataset  string
+	APIKey  string
+	Dataset string
 }
 
 // OtelTracer sets up a trace provider that sends data to an opentelemetry collector.
