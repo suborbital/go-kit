@@ -97,12 +97,5 @@ func tracerOpts(exporter trace.SpanExporter, serviceName, exporterName string, p
 			trace.WithBatchTimeout(trace.DefaultScheduleDelay*time.Millisecond),
 			trace.WithMaxExportBatchSize(trace.DefaultMaxExportBatchSize),
 		),
-		trace.WithResource(
-			resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceNameKey.String(serviceName),
-				attribute.String("exporter", "honeycomb"),
-			),
-		),
 	}
 }
