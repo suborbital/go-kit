@@ -36,16 +36,16 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, collectPeriod time.Du
 		return errors.Wrap(err, "otlpmetricgrpc.New")
 	}
 
-	r, err := resource.New(
-		ctx,
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String("uh, a thing"),
-			attribute.String("exporter", "grpc"),
-		),
+	r := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String("scn-thingy"),
+		semconv.TelemetrySDKLanguageGo,
+		semconv.ServiceInstanceIDKey.String("4523"),
+		semconv.ServiceNamespaceKey.String("production"),
+		semconv.ServiceVersionKey.String("v1.2.3"),
+		semconv.DBSystemPostgreSQL,
+		attribute.String("exporter", "grpc"),
 	)
-	if err != nil {
-		return errors.Wrap(err, "new resource with servicenamekey")
-	}
 
 	cont := controller.New(
 		processor.NewFactory(
