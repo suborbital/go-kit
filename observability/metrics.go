@@ -5,11 +5,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric/global"
 	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
 	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"google.golang.org/grpc"
 )
 
@@ -33,11 +36,23 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, collectPeriod time.Du
 		return errors.Wrap(err, "otlpmetricgrpc.New")
 	}
 
+	r, err := resource.New(
+		ctx,
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("uh, a thing"),
+			attribute.String("exporter", "grpc"),
+		),
+	)
+	if err != nil {
+		return errors.Wrap(err, "new resource with servicenamekey")
+	}
+
 	cont := controller.New(
 		processor.NewFactory(
 			simple.NewWithInexpensiveDistribution(),
 			exporter,
 		),
+		controller.WithResource(r),
 		controller.WithExporter(exporter),
 		controller.WithCollectPeriod(collectPeriod),
 	)
