@@ -16,14 +16,22 @@ import (
 	"google.golang.org/grpc"
 )
 
+type MeterConfig struct {
+	CollectPeriod    time.Duration
+	ServiceName      string
+	InstanceID       string
+	ServiceNamespace string
+	ServiceVersion   string
+}
+
 // OtelMeter takes a grpc connection to an otel collector, a collectPeriod time.Duration (more than a second), and
 // sets the meter collector up and assigns it to a global meter. If the function returns nil, assume that the global
 // meter is now set and ready to be used.
 //
 // This function merely sets up the scaffolding to ship collected metered data to the opentelemetry collector. It does
 // not set up the specific meters for the applications.
-func OtelMeter(ctx context.Context, conn *grpc.ClientConn, collectPeriod time.Duration) error {
-	if collectPeriod < time.Second {
+func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConfig) error {
+	if meterConfig.CollectPeriod < time.Second {
 		return errors.New("collect period is shorter than a second, please choose a longer period to avoid" +
 			" overloading the collector")
 	}
@@ -38,11 +46,11 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, collectPeriod time.Du
 
 	r := resource.NewWithAttributes(
 		semconv.SchemaURL,
-		semconv.ServiceNameKey.String("scn-thingy"),
+		semconv.ServiceNameKey.String(meterConfig.ServiceName),
 		semconv.TelemetrySDKLanguageGo,
-		semconv.ServiceInstanceIDKey.String("4523"),
-		semconv.ServiceNamespaceKey.String("production"),
-		semconv.ServiceVersionKey.String("v1.2.3"),
+		semconv.ServiceInstanceIDKey.String(meterConfig.InstanceID),
+		semconv.ServiceNamespaceKey.String(meterConfig.ServiceNamespace),
+		semconv.ServiceVersionKey.String(meterConfig.ServiceVersion),
 		semconv.DBSystemPostgreSQL,
 		attribute.String("exporter", "grpc"),
 	)
@@ -54,7 +62,7 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, collectPeriod time.Du
 		),
 		controller.WithResource(r),
 		controller.WithExporter(exporter),
-		controller.WithCollectPeriod(collectPeriod),
+		controller.WithCollectPeriod(meterConfig.CollectPeriod),
 	)
 
 	if err := cont.Start(context.Background()); err != nil {
