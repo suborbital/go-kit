@@ -19,7 +19,6 @@ import (
 type MeterConfig struct {
 	CollectPeriod    time.Duration
 	ServiceName      string
-	InstanceID       string
 	ServiceNamespace string
 	ServiceVersion   string
 }
@@ -48,7 +47,6 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 		semconv.SchemaURL,
 		semconv.ServiceNameKey.String(meterConfig.ServiceName),
 		semconv.TelemetrySDKLanguageGo,
-		semconv.ServiceInstanceIDKey.String(meterConfig.InstanceID),
 		semconv.ServiceNamespaceKey.String(meterConfig.ServiceNamespace),
 		semconv.ServiceVersionKey.String(meterConfig.ServiceVersion),
 		semconv.DBSystemPostgreSQL,
