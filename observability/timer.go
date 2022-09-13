@@ -18,5 +18,5 @@ func NewTimer() *timer {
 // Observe returns the number of milliseconds between when the timer was constructed, and when this function is called
 // as an int64.
 func (t *timer) Observe() int64 {
-	return time.Now().Sub(t.start).Milliseconds()
+	return time.Since(t.start).Milliseconds()
 }
