@@ -8,9 +8,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric/global"
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	"go.opentelemetry.io/otel/sdk/metric/selector/simple"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"google.golang.org/grpc"
@@ -53,20 +51,9 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 		attribute.String("exporter", "grpc"),
 	)
 
-	cont := controller.New(
-		processor.NewFactory(
-			simple.NewWithInexpensiveDistribution(),
-			exporter,
-		),
-		controller.WithResource(r),
-		controller.WithExporter(exporter),
-		controller.WithCollectPeriod(meterConfig.CollectPeriod),
-	)
+	reader := metric.NewPeriodicReader(exporter, metric.WithInterval(meterConfig.CollectPeriod))
+	provider := metric.NewMeterProvider(metric.WithResource(r), metric.WithReader(reader))
 
-	if err := cont.Start(context.Background()); err != nil {
-		return errors.Wrap(err, "metric controller Start")
-	}
-
-	global.SetMeterProvider(cont)
+	global.SetMeterProvider(provider)
 	return nil
 }
