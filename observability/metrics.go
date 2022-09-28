@@ -27,16 +27,16 @@ type MeterConfig struct {
 	ServiceVersion   string
 }
 
-// OtelMeter takes a grpc connection to an otel collector, a collectPeriod time.Duration (more than a second), and
-// sets the meter collector up and assigns it to a global meter. If the function returns nil, assume that the global
-// meter is now set and ready to be used.
+// OtelMeter takes a grpc connection to an otel collector, a MeterConfig that holds important data like collection
+// period, service and namespace names, and the version of the application we're attaching the meter to. It then
+// configures the meter provider, and returns a shutdown function and nil error if successful.
 //
 // This function merely sets up the scaffolding to ship collected metered data to the opentelemetry collector. It does
 // not set up the specific meters for the applications.
-func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConfig) (error, func(context.Context) error) {
+func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConfig) (func(context.Context) error, error) {
 	if meterConfig.CollectPeriod < time.Second {
-		return errors.New("collect period is shorter than a second, please choose a longer period to avoid" +
-			" overloading the collector"), nil
+		return nil, errors.New("collect period is shorter than a second, please choose a longer period to avoid" +
+			" overloading the collector")
 	}
 
 	// exporter is the thing that will send the data from the app to wherever else it needs to go.
@@ -45,7 +45,7 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 		otlpmetricgrpc.WithGRPCConn(conn),
 	)
 	if err != nil {
-		return errors.Wrap(err, "otlpmetricgrpc.New"), nil
+		return nil, errors.Wrap(err, "otlpmetricgrpc.New")
 	}
 
 	// periodicReader is the thing that collects the data every cycle, and then uses the exporter above to send it
@@ -59,15 +59,16 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 	)
 
 	// resource configures the very basic attributes of every measurement taken.
-	r := resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceNameKey.String(meterConfig.ServiceName),
-		semconv.TelemetrySDKLanguageGo,
-		semconv.ServiceNamespaceKey.String(meterConfig.ServiceNamespace),
-		semconv.ServiceVersionKey.String(meterConfig.ServiceVersion),
-		semconv.DBSystemPostgreSQL,
-		attribute.String("exporter", "grpc"),
-	)
+	r, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(meterConfig.ServiceName),
+			semconv.ServiceNamespaceKey.String(meterConfig.ServiceNamespace),
+			semconv.ServiceVersionKey.String(meterConfig.ServiceVersion),
+			semconv.DBSystemPostgreSQL,
+			attribute.String("exporter", "grpc"),
+		))
 
 	// meterProvider takes the resource, and the reader, to provide a thing that we can create actual instruments out
 	// of, so we can start measuring things.
@@ -77,5 +78,5 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 	)
 
 	global.SetMeterProvider(meterProvider)
-	return nil, meterProvider.Shutdown
+	return meterProvider.Shutdown, nil
 }
