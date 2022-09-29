@@ -9,8 +9,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/metricdata"
-	"go.opentelemetry.io/otel/sdk/metric/view"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"google.golang.org/grpc"
@@ -48,16 +46,6 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 		return nil, errors.Wrap(err, "otlpmetricgrpc.New")
 	}
 
-	// periodicReader is the thing that collects the data every cycle, and then uses the exporter above to send it
-	// someplace.
-	periodicReader := metric.NewPeriodicReader(exporter,
-		metric.WithTimeout(defaultReaderTimeout),
-		metric.WithInterval(meterConfig.CollectPeriod),
-		metric.WithTemporalitySelector(func(view.InstrumentKind) metricdata.Temporality {
-			return metricdata.DeltaTemporality
-		}),
-	)
-
 	// resource configures the very basic attributes of every measurement taken.
 	r, err := resource.Merge(
 		resource.Default(),
@@ -69,6 +57,16 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 			semconv.DBSystemPostgreSQL,
 			attribute.String("exporter", "grpc"),
 		))
+
+	// periodicReader is the thing that collects the data every cycle, and then uses the exporter above to send it
+	// someplace.
+	periodicReader := metric.NewPeriodicReader(exporter,
+		metric.WithTimeout(defaultReaderTimeout),
+		metric.WithInterval(meterConfig.CollectPeriod),
+		// metric.WithTemporalitySelector(func(view.InstrumentKind) metricdata.Temporality {
+		// 	return metricdata.DeltaTemporality
+		// }),
+	)
 
 	// meterProvider takes the resource, and the reader, to provide a thing that we can create actual instruments out
 	// of, so we can start measuring things.
