@@ -58,7 +58,7 @@ There are three configurable echo middlewares included in the kit.
 Provides good enough defaults with a simple call signature for ease of use:
 ```go
 func main() {
-    e := echo.New()
+	e := echo.New()
 	e.Use(
 		mid.CORS("*"),
     )
@@ -77,8 +77,8 @@ func main() {
 			mid.WithSkipper(func(c echo.Context) bool {
 				return c.Path() != "/dont/cors/this"
 			}),
-        ),
-    )
+		),
+	)
 }
 ```
 
@@ -96,7 +96,7 @@ func main() {
 	e.Use(
 		// requestID middleware goes here somewhere. As long as it's above the logger.
 		mid.Logger(logger),
-    )
+	)
 }
 ```
 
@@ -113,11 +113,10 @@ The key to retrieve the request ID value is `mid.RequestIDKey`.
 ```go
 func main() {
 	e := echo.New()
-	
 	e.Use(
 		mid.UUIDRequestID(),
 		// logger middleware should go somewhere here
-    )
+	)
 }
 
 func Handler() echo.HandlerFunc {
