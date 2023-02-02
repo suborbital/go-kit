@@ -49,6 +49,15 @@ func Meters() {
 
 ## Tracing
 
+The goal of the tracing functionality within the `observability` folder is to configure the tracer and the exporter. At the end of it the configured tracer will be stored in a global singleton which other parts of the codebase will read from and make use of, particularly the tracer middleware, and also all the instrumentations within the functions / methods.
+
+There are three different tracers that can be configured in regard to where the trace data gets exported to:
+- Noop tracer: the trace data goes nowhere, it gets discarded. Great for testing, local development, and for situations where the configuration is just bad.
+- Honeycomb: trace data ends up in Honeycomb. You need to pass the HoneycombTracingConfig to the HoneycombTracer function as well.
+- Collector agent: trace data ends up on a local opentelemetry collector agent.
+
+Both Honeycomb and the collector versions use a grpc connection. There's a `GrpcConnection` function in the `conn.go` file that you can use to establish the connection to either one of them.
+
 ## Web
 
 There are three configurable echo middlewares included in the kit.
@@ -64,6 +73,7 @@ func main() {
     )
 }
 ```
+
 In case it's needed, you can configure additional domains, additional allowed headers, and a skipper function in case there's a route you don't want the middleware to be applied to.
 
 ```go
