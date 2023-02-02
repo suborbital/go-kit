@@ -133,3 +133,9 @@ func Handler() echo.HandlerFunc {
 	}
 }
 ```
+
+### Tracing
+
+OpenTelemetry contrib already has an echo tracing middleware, best to use that one. You still need to configure it beforehand.
+
+The example that's in their repository is a minimally working implementation that's around 60 lines of code including the main function: https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/labstack/echo/otelecho/example/server.go#L46.
