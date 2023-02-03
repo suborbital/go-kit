@@ -60,9 +60,10 @@ Both Honeycomb and the collector versions use a grpc connection. There's a `Grpc
 
 ## Web
 
-There are three configurable echo middlewares included in the kit.
+There are three configurable echo middlewares included in the kit in the `mid` package inside this, and an echo implementation of a handler that exposes a source in the `source` package.
 
-### CORS
+### Middlewares
+#### CORS
 
 Provides good enough defaults with a simple call signature for ease of use:
 ```go
@@ -92,7 +93,7 @@ func main() {
 }
 ```
 
-### Logger
+#### Logger
 Provides a middleware that will log when a request comes in and when the same request goes out. Error handling happens before the response is logged, which means neither the logger, nor any other middleware up the chain can further modify the response status code / body.
 
 Important! The requestID logger needs to be outside of this middleware. In practical terms, it needs to be in the list passed to `e.Use` earlier.
@@ -110,7 +111,7 @@ func main() {
 }
 ```
 
-### RequestID
+#### RequestID
 
 The `UUIDRequestID` middleware configures echo's built in request ID middleware to use UUIDv4s instead of a random twenty-something character string.
 
@@ -143,8 +144,29 @@ func Handler() echo.HandlerFunc {
 }
 ```
 
-### Tracing
+#### Tracing
 
 OpenTelemetry contrib already has an echo tracing middleware, best to use that one. You still need to configure it beforehand.
 
 The example that's in their repository is a minimally working implementation that's around 60 lines of code including the main function: https://github.com/open-telemetry/opentelemetry-go-contrib/blob/main/instrumentation/github.com/labstack/echo/otelecho/example/server.go#L46.
+
+
+### Echo http source
+
+This is an echo implementation to expose an underlying system source. Here's how to use it:
+
+```go
+import "github.com/suborbital/go-kit/source"
+
+func main() {
+	logger := zerolog.New(os.Stderr)
+	
+	someSource := bundleSource{} // implements system.Source interface
+	
+	e := echo.New()
+	
+	es := source.NewEcho(logger, someSource)
+	
+	es.Attach(e)
+}
+```
