@@ -17,12 +17,12 @@ type EchoRouter struct {
 	source system.Source
 }
 
-// NewEcho attaches
-func NewEcho(logger zerolog.Logger, source system.Source) (*EchoRouter, error) {
+// NewEcho creates a new echo handler struct that has a logger and an underlying source.
+func NewEcho(logger zerolog.Logger, source system.Source) *EchoRouter {
 	return &EchoRouter{
 		logger: logger.With().Str("module", "source-echo-router").Logger(),
 		source: source,
-	}, nil
+	}
 }
 
 // Attach takes the incoming existing echo.Echo router, and adds the following routes to it:
