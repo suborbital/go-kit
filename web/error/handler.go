@@ -37,9 +37,9 @@ func Handler(logger zerolog.Logger) echo.HTTPErrorHandler {
 		message := he.Message
 		if m, ok := he.Message.(string); ok {
 			if c.Echo().Debug {
-				message = echo.Map{"code": code, "message": m, "error": err.Error()}
+				message = echo.Map{"status": code, "message": m, "error": err.Error()}
 			} else {
-				message = echo.Map{"code": code, "message": m}
+				message = echo.Map{"status": code, "message": m}
 			}
 		}
 
