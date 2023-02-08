@@ -71,6 +71,21 @@ e.Use(
 )
 ```
 
+There's also a standalone function called `RID(c echo.Context)` which takes a standard echo context, as opposed to one of our custom contexts, and returns the request ID stored in the response header if present.
+
+The upside is that we don't need to go through the hoops of adding the custom context middleware, and then asserting that an incoming echo context is actually a custom context so we can use the method on it.
+
+To use this:
+```go
+import "github.com/suborbital/go-kit/web/http"
+
+func SomeHandler(c echo.Context) error {
+	rid := http.RID(c)
+
+	return c.String(http.StatusOK, rid)
+}
+```
+
 ### Custom Context
 [Echo's Context interface can be extended](), so one excellent use for that is to provide convenience functions for things that might be repetitive, such as grabbing the request ID from it.
 
