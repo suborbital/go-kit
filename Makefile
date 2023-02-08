@@ -6,3 +6,6 @@ test:
 
 lint:
 	golangci-lint run -v ./...
+
+lintfix:
+	golangci-lint run -v --fix ./...
