@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
 	kitHttp "github.com/suborbital/go-kit/web/http"
 	"github.com/suborbital/go-kit/web/mid"
 )

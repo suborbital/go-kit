@@ -2,6 +2,7 @@ package mid
 
 import (
 	"github.com/labstack/echo/v4"
+
 	"github.com/suborbital/go-kit/web/http"
 )
 
