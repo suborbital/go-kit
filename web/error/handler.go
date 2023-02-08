@@ -5,6 +5,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
+
+	kitHttp "github.com/suborbital/go-kit/web/http"
 )
 
 func Handler(logger zerolog.Logger) echo.HTTPErrorHandler {
@@ -15,7 +17,7 @@ func Handler(logger zerolog.Logger) echo.HTTPErrorHandler {
 		}
 
 		ll.Err(err).
-			Str("requestID", c.Request().Header.Get(echo.HeaderXRequestID)).
+			Str("requestID", kitHttp.RID(c)).
 			Msg("request returned an error")
 
 		he, ok := err.(*echo.HTTPError)

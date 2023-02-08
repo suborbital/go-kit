@@ -4,6 +4,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
+
+	"github.com/suborbital/go-kit/web/http"
 )
 
 // Logger middleware configures echo's built in middleware.RequestLoggerWithConfig middleware. The passed in
@@ -43,7 +45,7 @@ func Logger(l zerolog.Logger, skipPaths []string) echo.MiddlewareFunc {
 			l.Info().
 				Str("path", c.Path()).
 				Str("URI", c.Request().RequestURI).
-				Str("requestID", c.Response().Header().Get(echo.HeaderXRequestID)).
+				Str("requestID", http.RID(c)).
 				Str("method", c.Request().Method).
 				Msg("request started")
 		},
