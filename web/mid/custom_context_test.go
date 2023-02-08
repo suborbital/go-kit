@@ -1,4 +1,4 @@
-package mid
+package mid_test
 
 import (
 	"io"
@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	kitHttp "github.com/suborbital/go-kit/web/http"
+	"github.com/suborbital/go-kit/web/mid"
 )
 
 func TestCustomContext(t *testing.T) {
@@ -33,7 +34,7 @@ func TestCustomContext(t *testing.T) {
 		{
 			name: "no request id mw, only custom context",
 			middlewares: []echo.MiddlewareFunc{
-				CustomContext(),
+				mid.CustomContext(),
 			},
 			expectedBody:       "unknown-request",
 			expectedStatusCode: http.StatusOK,
@@ -42,7 +43,7 @@ func TestCustomContext(t *testing.T) {
 			name: "request id before custom context",
 			middlewares: []echo.MiddlewareFunc{
 				uuidMW,
-				CustomContext(),
+				mid.CustomContext(),
 			},
 			expectedBody:       expectedRid,
 			expectedStatusCode: http.StatusOK,
@@ -50,7 +51,7 @@ func TestCustomContext(t *testing.T) {
 		{
 			name: "request id after custom context",
 			middlewares: []echo.MiddlewareFunc{
-				CustomContext(),
+				mid.CustomContext(),
 				uuidMW,
 			},
 			expectedBody:       expectedRid,
