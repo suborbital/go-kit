@@ -17,6 +17,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: false
       - uses: actions/checkout@v3
 
       - name: golangci-lint
@@ -24,6 +28,7 @@ jobs:
         with:
           version: latest
           skip-cache: true
+          args: -v
 
   test:
     runs-on: ubuntu-latest
