@@ -60,57 +60,55 @@ Both Honeycomb and the collector versions use a grpc connection. There's a `Grpc
 
 ## Web
 
-There are three configurable echo middlewares included in the kit.
-
-### CORS
-
-Provides good enough defaults with a simple call signature for ease of use:
+There are four middlewares included in the kit, three of them configurable. The order of the middlewares should be the following:
 ```go
-func main() {
-	e := echo.New()
-	e.Use(
-		mid.CORS("*"),
-    )
+e.Use(
+	mid.CustomContext(),
+	mid.UUIDRequestID(),
+	mid.Logger(logger),
+	mid.CORS("*"),
+	// anything else
+)
+```
+
+There's also a standalone function called `RID(c echo.Context)` which takes a standard echo context, as opposed to one of our custom contexts, and returns the request ID stored in the response header if present.
+
+The upside is that we don't need to go through the hoops of adding the custom context middleware, and then asserting that an incoming echo context is actually a custom context so we can use the method on it.
+
+To use this:
+```go
+import "github.com/suborbital/go-kit/web/http"
+
+func SomeHandler(c echo.Context) error {
+	rid := http.RID(c)
+
+	return c.String(http.StatusOK, rid)
 }
 ```
 
-In case it's needed, you can configure additional domains, additional allowed headers, and a skipper function in case there's a route you don't want the middleware to be applied to.
+### Custom Context
+[Echo's Context interface can be extended](), so one excellent use for that is to provide convenience functions for things that might be repetitive, such as grabbing the request ID from it.
 
+This needs to be the first middleware to be registered, but as the documentation page says, cannot be put in the `Pre` stack of middlewares.
+
+Here's how to use it in a handler after it's registered:
 ```go
-func main() {
-	e := echo.New()
-	e.Use(
-		mid.CORS(
-			"domainone.com",
-			mid.WithDomains("domaintwo.org", "domainthree.exe"),
-			mid.WithHeaders("X-Suborbital-State"),
-			mid.WithSkipper(func(c echo.Context) bool {
-				return c.Path() != "/dont/cors/this"
-			}),
-		),
-	)
+import "github.com/suborbital/go-kit/web/http"
+
+func SomeHandler(c echo.Context) error {
+	cc, ok := c.(*http.Context)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "custom context is not enabled")
+	}
+
+	rid := cc.RequestID()
+	// do the thing with the request ID
+
+	return c.JSON(http.StatusOK, data)
 }
 ```
 
-### Logger
-Provides a middleware that will log when a request comes in and when the same request goes out. Error handling happens before the response is logged, which means neither the logger, nor any other middleware up the chain can further modify the response status code / body.
-
-Important! The requestID logger needs to be outside of this middleware. In practical terms, it needs to be in the list passed to `e.Use` earlier.
-
-It uses rs/zerolog.
-```go
-func main() {
-	logger := zerolog.New(os.Stderr).With().Str("service", "myservice").Logger()
-	
-	e := echo.New()
-	e.Use(
-		// requestID middleware goes here somewhere. As long as it's above the logger.
-		mid.Logger(logger),
-	)
-}
-```
-
-### RequestID
+### UUIDRequestID
 
 The `UUIDRequestID` middleware configures echo's built in request ID middleware to use UUIDv4s instead of a random twenty-something character string.
 
@@ -140,6 +138,54 @@ func Handler() echo.HandlerFunc {
 		// to get it from the request header
 		rid := c.Request().Header.Get(echo.HeaderXRequestID)
 	}
+}
+```
+
+### Logger
+Provides a middleware that will log when a request comes in and when the same request goes out. Error handling happens before the response is logged, which means neither the logger, nor any other middleware up the chain can further modify the response status code / body.
+
+Important! The requestID logger needs to be outside of this middleware. In practical terms, it needs to be in the list passed to `e.Use` earlier.
+
+It uses rs/zerolog.
+```go
+func main() {
+	logger := zerolog.New(os.Stderr).With().Str("service", "myservice").Logger()
+	
+	e := echo.New()
+	e.Use(
+		// requestID middleware goes here somewhere. As long as it's above the logger.
+		mid.Logger(logger),
+	)
+}
+```
+
+### CORS
+
+Provides good enough defaults with a simple call signature for ease of use:
+```go
+func main() {
+	e := echo.New()
+	e.Use(
+		mid.CORS("*"),
+    )
+}
+```
+
+In case it's needed, you can configure additional domains, additional allowed headers, and a skipper function in case there's a route you don't want the middleware to be applied to.
+
+```go
+func main() {
+	e := echo.New()
+	e.Use(
+		mid.CORS(
+			"domainone.com",
+			mid.WithDomains("domaintwo.org", "domainthree.exe"),
+			mid.WithHeaders("X-Suborbital-State"),
+			mid.WithSkipper(func(c echo.Context) bool {
+				return c.Path() != "/dont/cors/this"
+			}),
+		),
+	)
 }
 ```
 
