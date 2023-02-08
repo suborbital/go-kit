@@ -22,3 +22,14 @@ func (c *Context) RequestID() string {
 
 	return rid
 }
+
+// RID is a short function that the echo context can be passed into, which returns the request ID as it grabs it from
+// the response header. The upside of this over the custom context is that a custom context is not required.
+func RID(c echo.Context) string {
+	rid := c.Response().Header().Get(echo.HeaderXRequestID)
+	if rid == "" {
+		return noRequestID
+	}
+
+	return rid
+}
