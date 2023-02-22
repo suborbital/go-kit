@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/rs/zerolog"
-
 	"github.com/sethvargo/go-envconfig"
 )
 
