@@ -8,6 +8,7 @@ require (
 	github.com/labstack/echo/v4 v4.10.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
+	github.com/sethvargo/go-envconfig v0.9.0
 	github.com/stretchr/testify v1.8.1
 	go.opentelemetry.io/otel v1.13.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v0.36.0
