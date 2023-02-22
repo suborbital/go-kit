@@ -2,6 +2,7 @@ package loglevel
 
 import (
 	"context"
+	"os"
 
 	"github.com/rs/zerolog"
 
@@ -59,4 +60,12 @@ func getC(l envconfig.Lookuper) Config {
 		// do nothing
 	}
 	return c
+}
+
+func Baseline(prefix string) zerolog.Logger {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	return zerolog.New(os.Stderr).With().
+		Timestamp().
+		Logger().
+		Level(FromEnv(prefix))
 }
