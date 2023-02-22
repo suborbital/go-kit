@@ -37,3 +37,26 @@ func SetLoggerLevel(l zerolog.Logger) zerolog.Logger {
 
 	return l.Level(lvl)
 }
+
+func FromEnv(prefix string) zerolog.Level {
+	return FromLookuper(prefix, envconfig.OsLookuper())
+}
+
+func FromLookuper(prefix string, l envconfig.Lookuper) zerolog.Level {
+	l = envconfig.PrefixLookuper(prefix, l)
+	c := getC(l)
+
+	if c.Debug {
+		return zerolog.DebugLevel
+	}
+
+	return zerolog.InfoLevel
+}
+
+func getC(l envconfig.Lookuper) Config {
+	var c Config
+	if err := envconfig.ProcessWith(context.Background(), &c, l); err != nil {
+		// do nothing
+	}
+	return c
+}
