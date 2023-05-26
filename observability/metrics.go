@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
@@ -72,6 +72,6 @@ func OtelMeter(ctx context.Context, conn *grpc.ClientConn, meterConfig MeterConf
 		metric.WithReader(periodicReader),
 	)
 
-	global.SetMeterProvider(meterProvider)
+	otel.SetMeterProvider(meterProvider)
 	return meterProvider.Shutdown, nil
 }
