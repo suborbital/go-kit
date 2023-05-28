@@ -2,6 +2,7 @@ package error
 
 import (
 	"net/http"
+	"runtime/debug"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -17,6 +18,11 @@ func Handler(logger zerolog.Logger) echo.HTTPErrorHandler {
 	ll := logger.With().Str("middleware", "errorHandler").Logger()
 	return func(err error, c echo.Context) {
 		rid := kitHttp.RID(c)
+
+		if err == nil {
+			ll.Warn().Msg(string(debug.Stack()))
+			return
+		}
 
 		ll.Warn().Str("requestID", rid).Str("error incoming", err.Error()).Msg("this is the errorw")
 
