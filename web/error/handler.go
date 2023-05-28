@@ -18,6 +18,8 @@ func Handler(logger zerolog.Logger) echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
 		rid := kitHttp.RID(c)
 
+		ll.Warn().Str("requestID", rid).Str("error incoming", err.Error()).Msg("this is the errorw")
+
 		if c.Response().Committed {
 			ll.Err(err).Str("requestID", rid).Msg("response already committed")
 			return
